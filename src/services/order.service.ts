@@ -1,55 +1,105 @@
-/* eslint-disable prettier/prettier */
+// eslint-disable-next-line prettier/prettier
+
 import { Injectable } from '@nestjs/common';
-import { Order } from '../models/order.model';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Order, OrderDocument } from '../models/order.model';
+import { WebSocketsGateway } from './web-sockets.gateway';
 
 @Injectable()
 export class OrderService {
-    async create(order) {
-        const createdOrder = new Order(order);
-        return await createdOrder.save();
+  doughChefQueue = [];
+  toppingChefQueue = [];
+  ovenQueue = [];
+  waiterQueue = [];
+
+  constructor(
+    @InjectModel('Order')
+    private readonly orderModel: Model<OrderDocument>,
+    private readonly webSocketsGateway: WebSocketsGateway,
+  ) {}
+
+  async create(toppings: string[]): Promise<OrderDocument> {
+    const newOrder = new this.orderModel({ toppings });
+    const createdOrder = await newOrder.save();
+    // add the created order to the dough chef queue
+    this.doughChefQueue.push(createdOrder._id);
+    this.processPipeline();
+    this.webSocketsGateway.server.emit('ordersChanged', await this.findAll());
+    return createdOrder;
+  }
+
+  async findAll() {
+    return await this.orderModel.find();
+  }
+
+  async findById(id: string) {
+    return await this.orderModel.findById(id);
+  }
+
+  async update(id: string, order) {
+    return await this.orderModel
+      .findByIdAndUpdate(id, order, { new: true })
+      .exec();
+  }
+
+  async delete(id: string) {
+    return await this.orderModel.findByIdAndDelete(id).exec();
+  }
+
+  async processPipeline() {
+    while (this.doughChefQueue.length > 0) {
+      const existingOrder = await this.findById(this.doughChefQueue.shift());
+      existingOrder.status = 'in progress';
+      await existingOrder.save();
+      this.webSocketsGateway.server.emit('ordersChanged', await this.findAll());
+
+      await this.sleep(7000);
+      existingOrder.doughPrepTime = 7;
+      await existingOrder.save();
+      this.webSocketsGateway.server.emit('ordersChanged', await this.findAll());
+
+      this.toppingChefQueue.push(existingOrder._id);
+      while (this.toppingChefQueue.length > 0) {
+        const existingOrder = await this.findById(
+          this.toppingChefQueue.shift(),
+        );
+        await this.sleep(4000 * existingOrder.toppings.length);
+        existingOrder.toppingPrepTime = 4 * existingOrder.toppings.length;
+        await existingOrder.save();
+        this.webSocketsGateway.server.emit(
+          'ordersChanged',
+          await this.findAll(),
+        );
+
+        this.ovenQueue.push(existingOrder._id);
+        while (this.ovenQueue.length > 0) {
+          const existingOrder = await this.findById(this.ovenQueue.shift());
+          await this.sleep(10000);
+          existingOrder.ovenPrepTime = 10;
+          await existingOrder.save();
+          this.webSocketsGateway.server.emit(
+            'ordersChanged',
+            await this.findAll(),
+          );
+
+          this.waiterQueue.push(existingOrder._id);
+          while (this.waiterQueue.length > 0) {
+            const existingOrder = await this.findById(this.waiterQueue.shift());
+            await this.sleep(5000);
+            existingOrder.walkTime = 5;
+            existingOrder.status = 'completed';
+            await existingOrder.save();
+            this.webSocketsGateway.server.emit(
+              'ordersChanged',
+              await this.findAll(),
+            );
+          }
+        }
+      }
     }
-
-    async findAll() {
-        return await Order.find().exec();
-    }
-
-    async findById(id: string) {
-        return await Order.findById(id).exec();
-    }
-
-    async update(id: string, order) {
-        return await Order.findByIdAndUpdate(id, order, { new: true }).exec();
-    }
-
-    async delete(id: string) {
-        return await Order.findByIdAndDelete(id).exec();
-    }
-
-    async processPipeline(order) {
-        order.status = 'in progress';
-        await order.save();
-
-        await this.sleep(7000);
-        order.doughPrepTime = 7;
-        await order.save();
-
-        await this.sleep(4000 * order.toppings.length);
-        order.toppingPrepTime = 4 * order.toppings.length;
-        await order.save();
-
-        await this.sleep(10000);
-        order.ovenPrepTime = 10;
-        await order.save();
-
-        await this.sleep(5000);
-        order.walkTime = 5;
-        await order.save();
-
-        order.status = 'completed';
-        await order.save();
-    }
-
-    sleep(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+  }
+  async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 }

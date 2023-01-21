@@ -3,12 +3,13 @@ import { Module } from '@nestjs/common';
 import { OrderService } from './services/order.service';
 import { OrderController } from './controllers/order.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { orderSchema } from './models/order.model';
+import { OrderSchema } from './models/order.model';
+import { WebSocketsGateway } from './services/web-sockets.gateway';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: 'Order', schema: orderSchema }])],
+  imports: [MongooseModule.forFeature([{ name: 'Order', schema: OrderSchema }])],
   controllers: [OrderController],
-  providers: [OrderService],
+  providers: [OrderService,WebSocketsGateway],
 
 })
 export class OrderModule {}

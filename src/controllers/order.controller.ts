@@ -8,8 +8,8 @@ export class OrderController {
     constructor(private readonly orderService:OrderService) {}
 
     @Post()
-    async create(@Body() order) {
-        return await this.orderService.create(order);
+    async create(@Body('toppings') toppings:string[]) {
+        return await this.orderService.create(toppings);
     }
 
     @Get()
@@ -34,6 +34,6 @@ export class OrderController {
 
     @Post('/process')
     async processPipeline(@Body() order) {
-        return await this.orderService.processPipeline(order);
+        return await this.orderService.processPipeline();
     }
 }

@@ -1,13 +1,27 @@
 /* eslint-disable prettier/prettier */
-import { Schema, model } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import {  model } from 'mongoose';
+import { Document } from 'mongoose';
 
-export const orderSchema = new Schema({
-    toppings: { type: [String], required: true },
-    doughPrepTime: { type: Number, default: 0 },
-    toppingPrepTime: { type: Number, default: 0 },
-    ovenPrepTime: { type: Number, default: 0 },
-    walkTime: { type: Number, default: 0 },
-    status: { type: String, default: 'pending' },
-});
+export type OrderDocument = Order & Document;
 
-export const Order = model('Order', orderSchema);
+@Schema()
+export class Order{
+    @Prop({required: true})
+    toppings: string[];
+    @Prop({default: 0})
+    doughPrepTime: number;
+    @Prop({default: 0})
+    toppingPrepTime: number;
+    @Prop({default: 0})
+    ovenPrepTime: number;
+    @Prop({default: 0})
+    walkTime: number;
+    @Prop({default: 'pending'})
+    status: string;
+
+
+};
+
+
+export const OrderSchema = SchemaFactory.createForClass(Order);
