@@ -32,7 +32,7 @@ export class OrderController {
         return await this.orderService.delete(id);
     }
 
-    @Delete('/clearOrders')
+    @Delete()
     async deleteAll() {
         return await this.orderService.deleteAll();
     }
