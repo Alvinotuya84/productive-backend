@@ -25,7 +25,7 @@ export class OrderService {
     // add the created order to the dough chef queue
     this.doughChefQueue.push(createdOrder._id);
     this.processPipeline();
-    this.webSocketsGateway.server.emit('ordersChanged', await this.findAll());
+    this.webSocketsGateway.server.emit('newOrder', await this.findAll());
     return createdOrder;
   }
 
@@ -45,6 +45,14 @@ export class OrderService {
 
   async delete(id: string) {
     return await this.orderModel.findByIdAndDelete(id).exec();
+  }
+  async deleteAll() {
+    await this.orderModel.remove();
+    this.webSocketsGateway.server.emit(
+      'allOrdersDeleted',
+      await this.findAll(),
+    );
+    return 'success deleting all Orders';
   }
 
   async processPipeline() {
@@ -88,10 +96,11 @@ export class OrderService {
             const existingOrder = await this.findById(this.waiterQueue.shift());
             await this.sleep(5000);
             existingOrder.walkTime = 5;
+            existingOrder.timeCompleted = new Date();
             existingOrder.status = 'completed';
             await existingOrder.save();
             this.webSocketsGateway.server.emit(
-              'ordersChanged',
+              'orderCompleted',
               await this.findAll(),
             );
           }

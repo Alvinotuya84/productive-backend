@@ -32,8 +32,8 @@ export class OrderController {
         return await this.orderService.delete(id);
     }
 
-    @Post('/process')
-    async processPipeline(@Body() order) {
-        return await this.orderService.processPipeline();
+    @Delete('/clearOrders')
+    async deleteAll() {
+        return await this.orderService.deleteAll();
     }
 }

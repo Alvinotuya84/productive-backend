@@ -19,6 +19,8 @@ export class Order{
     walkTime: number;
     @Prop({default: 'pending'})
     status: string;
+    @Prop({default: null})
+    timeCompleted: Date;
 
 
 };
