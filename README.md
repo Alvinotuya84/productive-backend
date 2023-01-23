@@ -8,6 +8,9 @@ clone the repo
 ```bash
 $ npm i -g @nestjs/cli
 
+cd into the project and type:
+
+
 $ npm install
 ```
 
