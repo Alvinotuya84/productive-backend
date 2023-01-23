@@ -44,10 +44,12 @@ export class OrderService {
   }
 
   async delete(id: string) {
-    return await this.orderModel.findByIdAndDelete(id).exec();
+    await this.orderModel.findByIdAndDelete(id).exec();
+    this.webSocketsGateway.server.emit('orderDeleted', await this.findAll());
+    return 'order deleted succesfully';
   }
   async deleteAll() {
-    await this.orderModel.remove();
+    await this.orderModel.deleteMany();
     this.webSocketsGateway.server.emit(
       'allOrdersDeleted',
       await this.findAll(),
@@ -102,6 +104,7 @@ export class OrderService {
             this.webSocketsGateway.server.emit(
               'orderCompleted',
               await this.findAll(),
+              existingOrder._id
             );
           }
         }
