@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { OrderService } from '../services/order.service';
-import { Order } from '../models/order.model';
+import { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 @Controller('order')
 export class OrderController {
@@ -9,7 +10,16 @@ export class OrderController {
 
     @Post()
     async create(@Body('toppings') toppings:string[]) {
-        return await this.orderService.create(toppings);
+        let clientIp=null;
+        try {
+            const response: AxiosResponse = await axios.get('http://checkip.dyndns.org');
+             clientIp = response.data.split(': ')[1].split('<')[0];
+
+          } catch (err) {
+            console.log(err);
+          }
+
+        return await this.orderService.create(toppings,clientIp);
     }
 
     @Get()

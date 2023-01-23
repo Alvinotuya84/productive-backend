@@ -19,8 +19,8 @@ export class OrderService {
     private readonly webSocketsGateway: WebSocketsGateway,
   ) {}
 
-  async create(toppings: string[]): Promise<OrderDocument> {
-    const newOrder = new this.orderModel({ toppings });
+  async create(toppings: string[], clientIp: string): Promise<OrderDocument> {
+    const newOrder = new this.orderModel({ toppings, ipaddress: clientIp });
     const createdOrder = await newOrder.save();
     // add the created order to the dough chef queue
     this.doughChefQueue.push(createdOrder._id);
