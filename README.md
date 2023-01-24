@@ -15,7 +15,7 @@ $ npm install
 ```
 
 ## Running the app
-Ensure you have internet connection before one of these running this command:
+Ensure you have internet connection before running one of these  command:
 Reason: The app uses mongodb atlas as it's dbms which is a cloud platform
 
 ```bash
