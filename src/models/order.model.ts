@@ -21,7 +21,7 @@ export class Order{
     status: string;
     @Prop({default: null})
     timeCompleted: Date;
-    @Prop({default: Date.now()})
+    @Prop({default: new Date()})
     timeStarted: Date;
     @Prop({default: null})
     ipaddress: string;
